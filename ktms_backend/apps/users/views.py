@@ -37,15 +37,19 @@ class RegisterAPIView(views.APIView):
                 "blocked_until": ban_record.blocked_until
             }, status=status.HTTP_403_FORBIDDEN)
 
-        # Generate 6-Digit OTP
-        generated_otp = "123456" # Production uses random.randint(100000, 999999)
+        # Generate Real 6-Digit Random OTP (Different every time)
+        generated_otp = str(random.randint(100000, 999999))
+        print(f"\n=======================================================")
+        print(f"*** REGISTRATION OTP GENERATED FOR {identifier}: {generated_otp} ***")
+        print(f"=======================================================\n")
+
         cache_key = f"reg_otp_{identifier}"
         pending_data = data.copy()
         pending_data['otp'] = generated_otp
         pending_data['otp_attempts'] = 0
         cache.set(cache_key, pending_data, timeout=600) # 10 mins cache
 
-        # Send OTP via Django Email Engine (Terminal Console / Production SMTP)
+        # Send OTP via Django Terminal Console Email Engine
         try:
             send_mail(
                 subject="Krishna Trading ERP - Your Registration OTP Code",
@@ -62,7 +66,7 @@ class RegisterAPIView(views.APIView):
             "message": "OTP sent successfully to registered email. Valid for 60 seconds.",
             "email": identifier,
             "resend_timer_seconds": 60,
-            "demo_otp": generated_otp # Provided for testing
+            "demo_otp": generated_otp # Output for dev inspection
         }, status=status.HTTP_200_OK)
 
 
@@ -75,25 +79,15 @@ class VerifyOTPAPIView(views.APIView):
             return Response({"status": "error", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         email = serializer.validated_data['email']
-        input_otp = serializer.validated_data['otp']
+        input_otp = serializer.validated_data['otp'].strip()
         cache_key = f"reg_otp_{email}"
         pending_data = cache.get(cache_key)
 
-        # Fallback for dev testing if session expired
         if not pending_data:
-            pending_data = {
-                'email': email,
-                'password': 'Password@123',
-                'first_name': email.split('@')[0].capitalize(),
-                'last_name': 'Customer',
-                'role': UserRole.WHOLESALE_CUSTOMER,
-                'mobile': '9876543210',
-                'otp': '123456',
-                'otp_attempts': 0
-            }
+            return Response({"status": "error", "message": "OTP session expired or not found. Please click Resend OTP."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # OTP Validation (Accepts 123456 or cached OTP)
-        if input_otp != '123456' and pending_data.get('otp') != input_otp:
+        # Strict Unique OTP Validation
+        if str(pending_data.get('otp')).strip() != input_otp:
             attempts = pending_data.get('otp_attempts', 0) + 1
             pending_data['otp_attempts'] = attempts
             cache.set(cache_key, pending_data, timeout=600)
