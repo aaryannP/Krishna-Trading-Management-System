@@ -128,8 +128,9 @@ class VerifyOTPAPIView(views.APIView):
             if CustomUser.objects.filter(mobile=user_mobile).exists():
                 user_mobile = f"{user_mobile[:5]}{random.randint(10000, 99999)}"
 
+            derived_uname = pending_data.get('username') or email.split('@')[0]
             user = CustomUser.objects.create_user(
-                username=email,
+                username=derived_uname,
                 email=email,
                 password=pending_data['password'],
                 first_name=pending_data['first_name'],
@@ -199,7 +200,11 @@ class LoginAPIView(views.APIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         from django.db.models import Q
-        user = CustomUser.objects.filter(Q(email__iexact=identifier) | Q(username__iexact=identifier)).first()
+        user = CustomUser.objects.filter(
+            Q(email__iexact=identifier) |
+            Q(username__iexact=identifier) |
+            Q(email__istartswith=f"{identifier}@")
+        ).first()
         if not user:
             return Response({"status": "error", "message": "Wrong Credentials! User not found."}, status=status.HTTP_400_BAD_REQUEST)
 

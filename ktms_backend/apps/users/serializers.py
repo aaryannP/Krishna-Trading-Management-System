@@ -18,6 +18,7 @@ class RegistrationSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
     email = serializers.EmailField()
+    username = serializers.CharField(required=False, allow_blank=True)
     dob = serializers.DateField(required=False, allow_null=True)
     mobile = serializers.CharField(max_length=20, required=False, allow_blank=True)
     phone_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
@@ -26,6 +27,10 @@ class RegistrationSerializer(serializers.Serializer):
     admin_passkey = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
+        # Auto-derive username from email if omitted or blank
+        if 'username' not in data or not data['username']:
+            data['username'] = data['email'].split('@')[0]
+
         # Normalize mobile / phone_number
         mobile_val = data.get('mobile') or data.get('phone_number', '9999999999')
         data['mobile'] = mobile_val
