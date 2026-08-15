@@ -11,6 +11,13 @@ class WelcomeDashboard extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
 
+    // Auto-redirect Super Admin directly to Admin ERP Dashboard
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (user?.role == 'SUPER_ADMIN') {
+        Navigator.pushReplacementNamed(context, '/admin/dashboard');
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
