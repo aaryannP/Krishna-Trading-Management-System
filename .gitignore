@@ -1,0 +1,7 @@
+python311/
+*.zip
+*.exe
+*.log
+ktms_backend/db.sqlite3
+ktms_backend/__pycache__/
+

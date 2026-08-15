@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from django.db import models
 from assets.models import Asset
 from users.models import CustomUser

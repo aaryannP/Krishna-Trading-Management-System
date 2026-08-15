@@ -51,6 +51,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (!mounted) return;
 
     if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration Initiated! OTP sent to your registered email.'),
+          backgroundColor: AppColors.emeraldGreen,
+          duration: Duration(seconds: 3),
+        ),
+      );
       Navigator.push(
         context,
         MaterialPageRoute(

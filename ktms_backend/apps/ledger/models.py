@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from django.db import models
 from users.models import CustomUser, WholesaleProfile
 from billing.models import Invoice

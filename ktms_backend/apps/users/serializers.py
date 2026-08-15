@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from rest_framework import serializers
 from users.models import CustomUser, WholesaleProfile, SuspiciousActivity, UserRole, WholesaleStatus
 
@@ -18,12 +19,21 @@ class RegistrationSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=100)
     email = serializers.EmailField()
     dob = serializers.DateField(required=False, allow_null=True)
-    mobile = serializers.CharField(max_length=20)
+    mobile = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    phone_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
     password = serializers.CharField(min_length=6, write_only=True)
-    confirm_password = serializers.CharField(min_length=6, write_only=True)
+    confirm_password = serializers.CharField(min_length=6, required=False, allow_blank=True, write_only=True)
     admin_passkey = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
+        # Normalize mobile / phone_number
+        mobile_val = data.get('mobile') or data.get('phone_number', '9999999999')
+        data['mobile'] = mobile_val
+
+        # Normalize confirm_password
+        if 'confirm_password' not in data or not data['confirm_password']:
+            data['confirm_password'] = data['password']
+
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError({"password": "Password and Confirm Password do not match."})
         
@@ -46,7 +56,8 @@ class VerifyOTPSerializer(serializers.Serializer):
     otp = serializers.CharField(max_length=6)
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.CharField(required=False, allow_blank=True)
+    username = serializers.CharField(required=False, allow_blank=True)
     password = serializers.CharField(write_only=True)
     admin_security_key = serializers.CharField(required=False, allow_blank=True)
 

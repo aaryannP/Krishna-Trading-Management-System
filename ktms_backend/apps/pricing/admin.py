@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from django.contrib import admin
 from pricing.models import WholesalePriceTier, ContractPricing
 

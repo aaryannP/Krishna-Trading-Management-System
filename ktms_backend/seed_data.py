@@ -1,5 +1,6 @@
 import os
 import sys
+# pyrefly: ignore [missing-import]
 import django
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -7,11 +8,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
+# pyrefly: ignore [missing-import]
 from users.models import CustomUser, UserRole, WholesaleProfile, WholesaleStatus
+# pyrefly: ignore [missing-import]
 from products.models import Category, Product
+# pyrefly: ignore [missing-import]
 from pricing.models import WholesalePriceTier
+# pyrefly: ignore [missing-import]
 from inventory.models import Warehouse, StockInventory
+# pyrefly: ignore [missing-import]
 from assets.models import Asset, AssetCategory, AssetStatus
+# pyrefly: ignore [missing-import]
 from fleet.models import FleetVehicle, VehicleType
 import datetime
 

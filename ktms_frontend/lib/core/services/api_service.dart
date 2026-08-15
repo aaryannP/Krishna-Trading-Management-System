@@ -13,6 +13,7 @@ class ApiService {
     final url = Uri.parse('$baseUrl/auth/login/');
     final body = {
       'username': username,
+      'email': username,
       'password': password,
       if (adminSecurityKey != null && adminSecurityKey.isNotEmpty)
         'admin_security_key': adminSecurityKey,
@@ -53,8 +54,10 @@ class ApiService {
       'username': username,
       'email': email,
       'password': password,
+      'confirm_password': password,
       'first_name': firstName,
       'last_name': lastName,
+      'mobile': phone,
       'phone_number': phone,
       'role': role,
     };

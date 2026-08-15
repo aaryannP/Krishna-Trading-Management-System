@@ -159,12 +159,12 @@ class LoginAPIView(views.APIView):
         if not serializer.is_valid():
             return Response({"status": "error", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        email = serializer.validated_data['email']
+        identifier = serializer.validated_data.get('email') or serializer.validated_data.get('username', '')
         password = serializer.validated_data['password']
         input_admin_key = serializer.validated_data.get('admin_security_key', '')
 
         # Check 48-Hour Ban
-        ban_record = SuspiciousActivity.objects.filter(identifier=email).first()
+        ban_record = SuspiciousActivity.objects.filter(identifier=identifier).first()
         if ban_record and ban_record.is_currently_blocked():
             return Response({
                 "status": "error",
@@ -172,9 +172,10 @@ class LoginAPIView(views.APIView):
                 "remaining_seconds": ban_record.remaining_seconds()
             }, status=status.HTTP_403_FORBIDDEN)
 
-        user = CustomUser.objects.filter(email=email).first()
+        from django.db.models import Q
+        user = CustomUser.objects.filter(Q(email__iexact=identifier) | Q(username__iexact=identifier)).first()
         if not user:
-            return Response({"status": "error", "message": "Wrong Credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": "error", "message": "Wrong Credentials! User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check 24-Hour Account Freeze
         if user.is_frozen and user.frozen_until:
