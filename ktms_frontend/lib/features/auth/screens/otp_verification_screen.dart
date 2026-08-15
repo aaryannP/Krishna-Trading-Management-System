@@ -30,10 +30,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   bool _isSubmitting = false;
 
-  void _onOtpSubmit() async {
+  void _onOtpSubmit({String? overrideOtp}) async {
     if (_isSubmitting) return;
 
-    final otp = _otpControllers.map((c) => c.text.trim()).join();
+    final otp = overrideOtp ?? _otpControllers.map((c) => c.text.trim()).join();
     if (otp.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -161,13 +161,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                         ),
                         onChanged: (val) {
+                          _otpControllers[index].text = val;
                           if (val.isNotEmpty && index < 5) {
                             _focusNodes[index + 1].requestFocus();
                           } else if (val.isEmpty && index > 0) {
                             _focusNodes[index - 1].requestFocus();
                           }
-                          if (index == 5 && val.isNotEmpty) {
-                            _onOtpSubmit();
+                          
+                          final currentOtp = List.generate(6, (i) => i == index ? val : _otpControllers[i].text.trim()).join();
+                          if (currentOtp.length == 6) {
+                            _onOtpSubmit(overrideOtp: currentOtp);
                           }
                         },
                       ),
