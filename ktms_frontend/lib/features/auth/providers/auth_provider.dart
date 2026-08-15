@@ -100,14 +100,14 @@ class AuthProvider with ChangeNotifier {
 
     if (result['statusCode'] == 200) {
       final data = result['data'];
-      _accessToken = data['tokens']['access'];
-      _refreshToken = data['tokens']['refresh'];
+      _accessToken = data['tokens']['access_token'] ?? data['tokens']['access'];
+      _refreshToken = data['tokens']['refresh_token'] ?? data['tokens']['refresh'];
       _currentUser = UserModel.fromJson(data['user']);
       notifyListeners();
       return true;
     } else {
       final data = result['data'];
-      _errorMessage = data['error'] ?? data['detail'] ?? 'Login failed';
+      _errorMessage = data['message'] ?? data['error'] ?? (data['errors'] != null ? data['errors'].toString() : 'Login failed');
       notifyListeners();
       return false;
     }
@@ -139,13 +139,13 @@ class AuthProvider with ChangeNotifier {
 
     _isLoading = false;
 
-    if (result['statusCode'] == 201) {
+    if (result['statusCode'] == 200 || result['statusCode'] == 201) {
       startOtpTimer();
       notifyListeners();
       return true;
     } else {
       final data = result['data'];
-      _errorMessage = data['error'] ?? 'Registration failed';
+      _errorMessage = data['message'] ?? data['error'] ?? (data['errors'] != null ? data['errors'].toString() : 'Registration failed');
       notifyListeners();
       return false;
     }

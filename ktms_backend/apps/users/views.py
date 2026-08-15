@@ -163,6 +163,10 @@ class LoginAPIView(views.APIView):
         password = serializer.validated_data['password']
         input_admin_key = serializer.validated_data.get('admin_security_key', '')
 
+        # Alias resolution: If user types 'admin', map to 'admin@krishnatrading.com'
+        if identifier.strip().lower() == 'admin':
+            identifier = 'admin@krishnatrading.com'
+
         # Check 48-Hour Ban
         ban_record = SuspiciousActivity.objects.filter(identifier=identifier).first()
         if ban_record and ban_record.is_currently_blocked():

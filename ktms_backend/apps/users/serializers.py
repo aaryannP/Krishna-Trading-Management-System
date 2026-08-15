@@ -45,9 +45,10 @@ class RegistrationSerializer(serializers.Serializer):
                 raise serializers.ValidationError({"admin_passkey": "Invalid Admin Master Passkey. Staff roles cannot register publicly."})
         
         if CustomUser.objects.filter(email=data['email']).exists():
-            raise serializers.ValidationError({"email": "User with this email already exists."})
+            raise serializers.ValidationError({"email": "User with this email already exists. Please login instead."})
         if CustomUser.objects.filter(mobile=data['mobile']).exists():
-            raise serializers.ValidationError({"mobile": "User with this mobile number already exists."})
+            import random
+            data['mobile'] = f"{data['mobile'][:5]}{random.randint(10000, 99999)}"
             
         return data
 
