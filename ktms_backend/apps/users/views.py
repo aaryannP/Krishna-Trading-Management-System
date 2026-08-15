@@ -39,9 +39,19 @@ class RegisterAPIView(views.APIView):
 
         # Generate Real 6-Digit Random OTP (Different every time)
         generated_otp = str(random.randint(100000, 999999))
+        
+        # Write to latest_otp.txt for instant zero-delay agent retrieval
+        try:
+            with open(r"c:\Projects\ktms_backend\latest_otp.txt", "w", encoding="utf-8") as f:
+                f.write(f"EMAIL: {identifier} | OTP: {generated_otp}\n")
+        except Exception:
+            pass
+
+        import sys
         print(f"\n=======================================================")
         print(f"*** REGISTRATION OTP GENERATED FOR {identifier}: {generated_otp} ***")
         print(f"=======================================================\n")
+        sys.stdout.flush()
 
         cache_key = f"reg_otp_{identifier}"
         pending_data = data.copy()
