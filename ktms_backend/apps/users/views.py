@@ -222,12 +222,18 @@ class LoginAPIView(views.APIView):
         if not user.check_password(password):
             return Response({"status": "error", "message": "Wrong Credentials!"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Admin Security Key Validation (If Admin Role)
-        if user.role in [UserRole.SUPER_ADMIN, UserRole.GENERAL_MANAGER]:
+        # Admin Security Key Validation (STRICTLY SUPER_ADMIN ONLY)
+        if user.role == UserRole.SUPER_ADMIN:
             if not user.admin_security_key:
                 birth_year = user.dob.year if user.dob else 2000
                 user.generate_admin_security_key(user.last_name, user.mobile, birth_year)
                 user.save()
+
+            if not input_admin_key:
+                return Response({
+                    "status": "error",
+                    "message": "Admin Security Key Required."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if input_admin_key != user.admin_security_key:
                 # Track failed Admin Security Key attempts in cache

@@ -16,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  String _selectedRole = 'SUPER_ADMIN';
   bool _obscurePassword = true;
 
   @override
@@ -70,18 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onLoginPressed() {
     if (!_formKey.currentState!.validate()) return;
-
-    if (_selectedRole == 'SUPER_ADMIN' || _selectedRole == 'GENERAL_MANAGER') {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AdminSecurityKeyDialog(
-          onSubmit: (key) => _executeLogin(adminKey: key),
-        ),
-      );
-    } else {
-      _executeLogin();
-    }
+    _executeLogin();
   }
 
   @override
@@ -151,34 +139,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  DropdownButtonFormField<String>(
-                    value: _selectedRole,
-                    decoration: const InputDecoration(
-                      labelText: 'Select Portal Access Role',
-                      prefixIcon: Icon(Icons.shield_outlined, color: AppColors.primaryCyan),
-                    ),
-                    dropdownColor: AppColors.surfaceCard,
-                    items: const [
-                      DropdownMenuItem(value: 'SUPER_ADMIN', child: Text('Super Admin')),
-                      DropdownMenuItem(value: 'GENERAL_MANAGER', child: Text('General Manager')),
-                      DropdownMenuItem(value: 'FLEET_MANAGER', child: Text('Fleet Manager')),
-                      DropdownMenuItem(value: 'STAFF', child: Text('Shop / Warehouse Staff')),
-                      DropdownMenuItem(value: 'DRIVER', child: Text('Driver Logistics Staff')),
-                      DropdownMenuItem(value: 'RETAIL_CUSTOMER', child: Text('Retail B2C Customer')),
-                      DropdownMenuItem(value: 'WHOLESALE_CUSTOMER', child: Text('Wholesale B2B Customer')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedRole = val);
-                    },
-                  ),
-                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _usernameController,
                     decoration: const InputDecoration(
                       labelText: 'Username or Email',
                       prefixIcon: Icon(Icons.person_outline, color: AppColors.primaryCyan),
                     ),
-                    validator: (v) => v!.isEmpty ? 'Please enter username' : null,
+                    validator: (v) => v!.isEmpty ? 'Please enter username or email' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
