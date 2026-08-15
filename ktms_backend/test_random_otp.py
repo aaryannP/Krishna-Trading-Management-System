@@ -16,7 +16,7 @@ res_reg = requests.post(f"{base_url}/auth/register/", json={
 print("1. Registration Status:", res_reg.status_code)
 data = res_reg.json()
 otp_generated = data.get("demo_otp")
-print("🔥 GENERATED RANDOM OTP FOR testotp99@gmail.com IS:", otp_generated)
+print("*** GENERATED RANDOM OTP IS:", otp_generated)
 
 # 2. Try wrong OTP (e.g. 000000)
 res_wrong = requests.post(f"{base_url}/auth/verify-otp/", json={
