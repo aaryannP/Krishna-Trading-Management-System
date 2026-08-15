@@ -7,6 +7,18 @@ import 'features/auth/screens/registration_screen.dart';
 import 'features/auth/screens/ban_48hr_screen.dart';
 import 'features/auth/screens/freeze_24hr_screen.dart';
 import 'features/dashboard/screens/welcome_dashboard.dart';
+import 'features/admin/screens/admin_dashboard_screen.dart';
+import 'features/admin/screens/admin_profile_screen.dart';
+import 'features/admin/screens/user_management_screen.dart';
+import 'features/admin/screens/add_person_screen.dart';
+import 'features/admin/screens/asset_dashboard_screen.dart';
+import 'features/admin/screens/add_asset_screen.dart';
+import 'features/admin/screens/asset_list_screen.dart';
+import 'features/admin/screens/assign_asset_screen.dart';
+import 'features/admin/screens/asset_history_screen.dart';
+import 'features/admin/screens/asset_maintenance_screen.dart';
+import 'features/admin/screens/asset_categories_screen.dart';
+import 'features/admin/screens/fleet_dashboard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +45,20 @@ class KtmsApp extends StatelessWidget {
           '/ban-48hr': (context) => const Ban48HrScreen(),
           '/freeze-24hr': (context) => const Freeze24HrScreen(),
           '/welcome': (context) => const WelcomeDashboard(),
+
+          // Super Admin ERP Suite - Part 1 (Pages 1 to 12)
+          '/admin/dashboard': (context) => const AdminDashboardScreen(),
+          '/admin/profile': (context) => const AdminProfileScreen(),
+          '/admin/users': (context) => const UserManagementScreen(),
+          '/admin/users/add': (context) => const AddPersonScreen(),
+          '/admin/assets/dashboard': (context) => const AssetDashboardScreen(),
+          '/admin/assets/add': (context) => const AddAssetScreen(),
+          '/admin/assets/list': (context) => const AssetListScreen(),
+          '/admin/assets/assign': (context) => const AssignAssetScreen(),
+          '/admin/assets/history': (context) => const AssetHistoryScreen(),
+          '/admin/assets/maintenance': (context) => const AssetMaintenanceScreen(),
+          '/admin/assets/categories': (context) => const AssetCategoriesScreen(),
+          '/admin/fleet/dashboard': (context) => const FleetDashboardScreen(),
         },
       ),
     );

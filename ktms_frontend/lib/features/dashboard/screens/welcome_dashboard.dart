@@ -125,11 +125,32 @@ class WelcomeDashboard extends StatelessWidget {
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryCyan,
+                      foregroundColor: AppColors.background,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/admin/dashboard');
+                    },
+                    icon: const Icon(Icons.dashboard_rounded, color: AppColors.background),
+                    label: const Text(
+                      'Enter Super Admin ERP Suite 🚀',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.coralRed,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () {
                       authProvider.logout();
