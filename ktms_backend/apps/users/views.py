@@ -121,17 +121,27 @@ class VerifyOTPAPIView(views.APIView):
                 "attempts_remaining": 3 - attempts
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # OTP Verified -> Create CustomUser
-        user = CustomUser.objects.create_user(
-            username=email,
-            email=email,
-            password=pending_data['password'],
-            first_name=pending_data['first_name'],
-            last_name=pending_data['last_name'],
-            role=pending_data['role'],
-            mobile=pending_data['mobile'],
-            dob=pending_data.get('dob')
-        )
+        # OTP Verified -> Create or Retrieve CustomUser safely
+        user = CustomUser.objects.filter(email=email).first()
+        if not user:
+            user_mobile = pending_data.get('mobile', '9876543210')
+            if CustomUser.objects.filter(mobile=user_mobile).exists():
+                user_mobile = f"{user_mobile[:5]}{random.randint(10000, 99999)}"
+
+            user = CustomUser.objects.create_user(
+                username=email,
+                email=email,
+                password=pending_data['password'],
+                first_name=pending_data['first_name'],
+                last_name=pending_data['last_name'],
+                role=pending_data['role'],
+                mobile=user_mobile,
+                dob=pending_data.get('dob')
+            )
+        else:
+            user.set_password(pending_data['password'])
+            user.is_active = True
+            user.save()
 
         # Generate Dynamic Admin Security Key if Admin
         if user.role in [UserRole.SUPER_ADMIN, UserRole.GENERAL_MANAGER]:
@@ -139,13 +149,15 @@ class VerifyOTPAPIView(views.APIView):
             user.generate_admin_security_key(user.last_name, user.mobile, birth_year)
             user.save()
 
-        # If Wholesale Customer, Create Wholesale Profile
+        # If Wholesale Customer, Get or Create Wholesale Profile safely
         if user.role == UserRole.WHOLESALE_CUSTOMER:
-            WholesaleProfile.objects.create(
+            WholesaleProfile.objects.get_or_create(
                 user=user,
-                company_name=request.data.get('company_name', f"{user.first_name}'s Business"),
-                gstin=request.data.get('gstin', f"24{random.randint(1000000000, 9999999999)}A1Z5"),
-                verification_status=WholesaleStatus.PENDING
+                defaults={
+                    'company_name': request.data.get('company_name', f"{user.first_name}'s Business"),
+                    'gstin': request.data.get('gstin', f"24{random.randint(1000000000, 9999999999)}A1Z5"),
+                    'verification_status': WholesaleStatus.PENDING
+                }
             )
 
         cache.delete(cache_key)
