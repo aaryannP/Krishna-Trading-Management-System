@@ -28,7 +28,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     super.dispose();
   }
 
+  bool _isSubmitting = false;
+
   void _onOtpSubmit() async {
+    if (_isSubmitting) return;
+
     final otp = _otpControllers.map((c) => c.text.trim()).join();
     if (otp.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -40,6 +44,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
 
+    setState(() => _isSubmitting = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.verifyOTP(
       email: widget.email,
@@ -47,6 +52,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     );
 
     if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(

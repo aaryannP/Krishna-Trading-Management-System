@@ -92,6 +92,21 @@ class VerifyOTPAPIView(views.APIView):
 
         email = serializer.validated_data['email'].strip().lower()
         input_otp = serializer.validated_data['otp'].strip()
+
+        # Duplicate submission safety: If user was already activated, return success immediately
+        existing_active_user = CustomUser.objects.filter(email=email, is_active=True).first()
+        if existing_active_user:
+            refresh = RefreshToken.for_user(existing_active_user)
+            return Response({
+                "status": "success",
+                "message": "User Registered Successfully!",
+                "tokens": {
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh)
+                },
+                "user": UserSerializer(existing_active_user).data
+            }, status=status.HTTP_200_OK)
+
         cache_key = f"reg_otp_{email}"
         pending_data = cache.get(cache_key)
         latest_otp = cache.get("latest_generated_otp")
