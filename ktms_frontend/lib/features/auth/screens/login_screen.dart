@@ -43,7 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: AppColors.emeraldGreen,
         ),
       );
-      Navigator.pushReplacementNamed(context, '/welcome');
+      if (authProvider.currentUser?.role == 'SUPER_ADMIN') {
+        Navigator.pushReplacementNamed(context, '/admin/dashboard');
+      } else {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
     } else {
       if (authProvider.errorMessage?.contains('Admin Security Key Required') == true) {
         // Show Admin Key Popup
