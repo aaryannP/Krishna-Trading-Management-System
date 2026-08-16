@@ -160,16 +160,20 @@ class ApiService {
   }
 
   // Fetch All Users Count & Breakdown
-  static Future<Map<String, dynamic>> getUsersList(String token) async {
+  static Future<Map<String, dynamic>> getUsersList([String? token]) async {
     final url = Uri.parse('$baseUrl/users/');
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
 
     try {
       final response = await http.get(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
       );
 
       final data = jsonDecode(response.body);

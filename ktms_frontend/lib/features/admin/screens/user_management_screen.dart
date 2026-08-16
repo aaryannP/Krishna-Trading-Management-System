@@ -30,7 +30,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   Future<void> _fetchRealUsers() async {
     setState(() => _isLoading = true);
-    final response = await ApiService.getUsersList("");
+    final response = await ApiService.getUsersList();
     if (mounted) {
       if (response['statusCode'] == 200 && response['data'] != null) {
         setState(() {
@@ -104,15 +104,25 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           ),
                         ],
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryCyan,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => Navigator.pushReplacementNamed(context, '/admin/users/add'),
-                        icon: const Icon(Icons.person_add_alt_1_rounded, color: AppColors.background, size: 18),
-                        label: const Text('Add New Person', style: TextStyle(color: AppColors.background, fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryCyan),
+                            tooltip: 'Refresh Database Records',
+                            onPressed: _fetchRealUsers,
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryCyan,
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () => Navigator.pushReplacementNamed(context, '/admin/users/add'),
+                            icon: const Icon(Icons.person_add_alt_1_rounded, color: AppColors.background, size: 18),
+                            label: const Text('Add New Person', style: TextStyle(color: AppColors.background, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
