@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../widgets/admin_sidebar_navigation.dart';
+import '../../../../core/services/api_service.dart';
 
 class AddAssetScreen extends StatefulWidget {
   const AddAssetScreen({super.key});
@@ -11,31 +12,56 @@ class AddAssetScreen extends StatefulWidget {
 
 class _AddAssetScreenState extends State<AddAssetScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _assetCodeController = TextEditingController(text: 'AST-${1000 + (DateTime.now().millisecondsSinceEpoch % 8999)}');
+  final _assetCodeController = TextEditingController(text: 'AST-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}');
   final _assetNameController = TextEditingController();
-  final _purchaseCostController = TextEditingController();
-  final _vendorController = TextEditingController();
-  String _selectedCategory = 'Heavy Machinery';
+  final _modelController = TextEditingController();
+  final _serialController = TextEditingController();
+  final _costController = TextEditingController();
+  String _selectedCategory = 'MACHINE';
 
   @override
   void dispose() {
     _assetCodeController.dispose();
     _assetNameController.dispose();
-    _purchaseCostController.dispose();
-    _vendorController.dispose();
+    _modelController.dispose();
+    _serialController.dispose();
+    _costController.dispose();
     super.dispose();
   }
 
-  void _onSaveAsset() {
+  void _onSaveAsset() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Asset Registered Successfully: ${_assetCodeController.text} (${_assetNameController.text})'),
-        backgroundColor: AppColors.emeraldGreen,
-      ),
-    );
-    Navigator.pushReplacementNamed(context, '/admin/assets/dashboard');
+    final assetData = {
+      'asset_code': _assetCodeController.text.trim(),
+      'name': _assetNameController.text.trim(),
+      'category': _selectedCategory,
+      'model_no': _modelController.text.trim(),
+      'serial_no': _serialController.text.trim(),
+      'purchase_cost': double.tryParse(_costController.text.trim()) ?? 0.0,
+      'status': 'AVAILABLE',
+    };
+
+    final response = await ApiService.addAsset(assetData);
+    if (!mounted) return;
+
+    if (response['statusCode'] == 201 || response['statusCode'] == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Asset Registered Successfully: ${assetData['name']}'),
+          backgroundColor: AppColors.emeraldGreen,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/admin/assets/list');
+    } else {
+      final errorMsg = response['data']?['message'] ?? response['data']?['errors']?.toString() ?? 'Failed to add asset';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $errorMsg'),
+          backgroundColor: AppColors.coralRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -148,7 +174,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                             children: [
                               Expanded(
                                 child: TextFormField(
-                                  controller: _purchaseCostController,
+                                  controller: _costController,
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
                                     labelText: 'Purchase Cost (₹) *',
@@ -160,9 +186,9 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextFormField(
-                                  controller: _vendorController,
+                                  controller: _modelController,
                                   decoration: const InputDecoration(
-                                    labelText: 'Supplier / Vendor Name',
+                                    labelText: 'Model / Serial No.',
                                     prefixIcon: Icon(Icons.store_outlined, color: AppColors.primaryCyan),
                                   ),
                                 ),

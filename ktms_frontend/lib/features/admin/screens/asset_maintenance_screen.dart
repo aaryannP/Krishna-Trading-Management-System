@@ -1,9 +1,39 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 
-class AssetMaintenanceScreen extends StatelessWidget {
+class AssetMaintenanceScreen extends StatefulWidget {
   const AssetMaintenanceScreen({super.key});
+
+  @override
+  State<AssetMaintenanceScreen> createState() => _AssetMaintenanceScreenState();
+}
+
+class _AssetMaintenanceScreenState extends State<AssetMaintenanceScreen> {
+  List<dynamic> _realLogs = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMaintenanceLogs();
+  }
+
+  Future<void> _fetchMaintenanceLogs() async {
+    setState(() => _isLoading = true);
+    final response = await ApiService.getAssetMaintenance();
+    if (mounted) {
+      if (response['statusCode'] == 200 && response['data'] != null) {
+        setState(() {
+          _realLogs = response['data']['logs'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +58,24 @@ class AssetMaintenanceScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Asset Repair & Servicing Requests', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
-                  const Text('Track maintenance tickets, repair costs, and vendor servicing status.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Asset Repair & Servicing Requests', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                          SizedBox(height: 4),
+                          Text('Track maintenance tickets, repair costs, and vendor servicing status.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryCyan),
+                        tooltip: 'Refresh Maintenance Logs',
+                        onPressed: _fetchMaintenanceLogs,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -39,23 +84,38 @@ class AssetMaintenanceScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.surfaceCardBorder),
                     ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(AppColors.background),
-                        columns: const [
-                          DataColumn(label: Text('TICKET ID', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('ASSET', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('ISSUE DESCRIPTION', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('ESTIMATED COST', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('SERVICING STATUS', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                        ],
-                        rows: [
-                          _buildMaintRow('TKT-901', 'AST-1002 (50-Ton Weighbridge)', 'Sensor calibration & display panel flicker', '₹15,000', 'In Progress 🟡', AppColors.amberWarning),
-                          _buildMaintRow('TKT-900', 'AST-1001 (Bale Press Machine)', 'Hydraulic oil leakage & seal replacement', '₹28,000', 'Completed 🟢', AppColors.emeraldGreen),
-                        ],
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: AppColors.primaryCyan)))
+                        : _realLogs.isEmpty
+                            ? const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No maintenance logs recorded in database yet.', style: TextStyle(color: AppColors.textSecondary))))
+                            : SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  headingRowColor: WidgetStateProperty.all(AppColors.background),
+                                  columns: const [
+                                    DataColumn(label: Text('TICKET ID', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('ASSET', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('ISSUE DESCRIPTION', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('COST', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('SERVICING STATUS', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                  ],
+                                  rows: _realLogs.map((log) {
+                                    final tktId = "TKT-${log['id'] ?? 100}";
+                                    final assetDetail = log['asset_detail'] ?? {};
+                                    final assetStr = "${assetDetail['asset_code'] ?? 'AST'} (${assetDetail['name'] ?? 'Asset'})";
+                                    final serviceType = (log['service_type'] ?? 'General Service').toString();
+                                    final cost = "₹${log['cost'] ?? '0.00'}";
+                                    final statusStr = (log['status'] ?? 'Completed').toString();
+
+                                    Color color = AppColors.emeraldGreen;
+                                    if (statusStr.toUpperCase().contains('PROGRESS')) {
+                                      color = AppColors.amberWarning;
+                                    }
+
+                                    return _buildMaintRow(tktId, assetStr, serviceType, cost, statusStr, color);
+                                  }).toList(),
+                                ),
+                              ),
                   ),
                 ],
               ),

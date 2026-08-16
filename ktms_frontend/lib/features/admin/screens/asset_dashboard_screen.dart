@@ -1,15 +1,58 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 import '../widgets/stat_metric_card.dart';
 
-class AssetDashboardScreen extends StatelessWidget {
+class AssetDashboardScreen extends StatefulWidget {
   const AssetDashboardScreen({super.key});
+
+  @override
+  State<AssetDashboardScreen> createState() => _AssetDashboardScreenState();
+}
+
+class _AssetDashboardScreenState extends State<AssetDashboardScreen> {
+  Map<String, dynamic> _metrics = {
+    'total_count': 0,
+    'total_valuation': 0.0,
+    'available_count': 0,
+    'assigned_count': 0,
+    'maintenance_count': 0,
+    'damaged_count': 0,
+  };
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardMetrics();
+  }
+
+  Future<void> _fetchDashboardMetrics() async {
+    setState(() => _isLoading = true);
+    final response = await ApiService.getAssetDashboard();
+    if (mounted) {
+      if (response['statusCode'] == 200 && response['data'] != null) {
+        setState(() {
+          _metrics = response['data']['metrics'] ?? _metrics;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1100;
+
+    final double totalValuation = (_metrics['total_valuation'] ?? 0.0).toDouble();
+    final int totalCount = _metrics['total_count'] ?? 0;
+    final int availableCount = _metrics['available_count'] ?? 0;
+    final int assignedCount = _metrics['assigned_count'] ?? 0;
+    final int maintenanceCount = _metrics['maintenance_count'] ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -46,15 +89,25 @@ class AssetDashboardScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryCyan,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => Navigator.pushReplacementNamed(context, '/admin/assets/add'),
-                        icon: const Icon(Icons.add_box_rounded, color: AppColors.background, size: 18),
-                        label: const Text('Register New Asset', style: TextStyle(color: AppColors.background, fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryCyan),
+                            tooltip: 'Refresh Metrics',
+                            onPressed: _fetchDashboardMetrics,
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryCyan,
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () => Navigator.pushReplacementNamed(context, '/admin/assets/add'),
+                            icon: const Icon(Icons.add_box_rounded, color: AppColors.background, size: 18),
+                            label: const Text('Register New Asset', style: TextStyle(color: AppColors.background, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -72,39 +125,38 @@ class AssetDashboardScreen extends StatelessWidget {
                         childAspectRatio: width < 650 ? 2.2 : 1.4,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: const [
+                        children: [
                           StatMetricCard(
                             title: 'Total Capital Assets',
-                            value: '₹34,80,000',
-                            subtext: '48 Registered Machinery & Assets',
+                            value: '₹${totalValuation.toStringAsFixed(2)}',
+                            subtext: '$totalCount Registered Assets in DB',
                             icon: Icons.account_balance_wallet_rounded,
                             iconColor: AppColors.primaryCyan,
-                            badgeText: '48 Total',
+                            badgeText: '100% DB Live',
                           ),
                           StatMetricCard(
-                            title: 'Operational Assets',
-                            value: '43 Active',
-                            subtext: 'Assigned to Factory & Logistics',
+                            title: 'Available Equipment',
+                            value: '$availableCount',
+                            subtext: 'Ready for Assignment',
                             icon: Icons.check_circle_rounded,
                             iconColor: AppColors.emeraldGreen,
-                            badgeText: '90% Active',
+                            badgeText: 'Available 🟢',
                           ),
                           StatMetricCard(
-                            title: 'Under Maintenance',
-                            value: '3 Items',
-                            subtext: '1 Weighbridge, 2 Hydraulic Lifts',
-                            icon: Icons.build_rounded,
+                            title: 'Assigned to Staff/Drivers',
+                            value: '$assignedCount',
+                            subtext: 'In Active Deployment',
+                            icon: Icons.person_pin_circle_rounded,
+                            iconColor: AppColors.primaryCyan,
+                            badgeText: 'Assigned 🔵',
+                          ),
+                          StatMetricCard(
+                            title: 'Under Servicing / Maintenance',
+                            value: '$maintenanceCount',
+                            subtext: 'Active Maintenance Logs',
+                            icon: Icons.build_circle_rounded,
                             iconColor: AppColors.amberWarning,
-                            badgeText: 'Servicing',
-                            isPositiveBadge: false,
-                          ),
-                          StatMetricCard(
-                            title: 'Unassigned Inventory',
-                            value: '2 Items',
-                            subtext: 'In Spare Storage Godown A',
-                            icon: Icons.inventory_2_rounded,
-                            iconColor: Colors.purpleAccent,
-                            badgeText: 'Spare',
+                            badgeText: 'Servicing 🟡',
                           ),
                         ],
                       );

@@ -1,15 +1,57 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 import '../widgets/stat_metric_card.dart';
 
-class FleetDashboardScreen extends StatelessWidget {
+class FleetDashboardScreen extends StatefulWidget {
   const FleetDashboardScreen({super.key});
+
+  @override
+  State<FleetDashboardScreen> createState() => _FleetDashboardScreenState();
+}
+
+class _FleetDashboardScreenState extends State<FleetDashboardScreen> {
+  Map<String, dynamic> _metrics = {
+    'total_vehicles': 0,
+    'active_trips': 0,
+    'delivered_trips': 0,
+    'total_fuel_logs': 0,
+  };
+  List<dynamic> _vehicles = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFleetData();
+  }
+
+  Future<void> _fetchFleetData() async {
+    setState(() => _isLoading = true);
+    final response = await ApiService.getFleetDashboard();
+    if (mounted) {
+      if (response['statusCode'] == 200 && response['data'] != null) {
+        setState(() {
+          _metrics = response['data']['metrics'] ?? _metrics;
+          _vehicles = response['data']['vehicles'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1100;
+
+    final int totalVehicles = _metrics['total_vehicles'] ?? 0;
+    final int activeTrips = _metrics['active_trips'] ?? 0;
+    final int deliveredTrips = _metrics['delivered_trips'] ?? 0;
+    final int fuelLogs = _metrics['total_fuel_logs'] ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -29,9 +71,24 @@ class FleetDashboardScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Fleet Logistics & Dispatch Operations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
-                  const Text('Vehicle payload capacity matcher, live driver trips, and fuel management.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Fleet Logistics & Dispatch Operations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                          SizedBox(height: 4),
+                          Text('Vehicle payload capacity matcher, live driver trips, and fuel management.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryCyan),
+                        tooltip: 'Refresh Fleet Data',
+                        onPressed: _fetchFleetData,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
 
                   // Fleet Stat Cards
@@ -46,34 +103,34 @@ class FleetDashboardScreen extends StatelessWidget {
                         childAspectRatio: width < 650 ? 2.2 : 1.4,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: const [
+                        children: [
                           StatMetricCard(
                             title: 'Active Fleet Vehicles',
-                            value: '8 Vehicles',
-                            subtext: 'Activa (2), Supro (3), Tempo (2), Truck (1)',
+                            value: '$totalVehicles Vehicles',
+                            subtext: 'DB Tracked Fleet Capacity',
                             icon: Icons.local_shipping_rounded,
                             iconColor: AppColors.primaryCyan,
-                            badgeText: '8 Active',
+                            badgeText: '100% DB Live',
                           ),
                           StatMetricCard(
                             title: 'Trips In Transit Today',
-                            value: '6 Dispatches',
-                            subtext: '4 Wholesale Bales + 2 Retail Parcels',
+                            value: '$activeTrips Dispatches',
+                            subtext: '$deliveredTrips Trips Delivered',
                             icon: Icons.alt_route_rounded,
                             iconColor: AppColors.emeraldGreen,
                             badgeText: 'On Route',
                           ),
                           StatMetricCard(
-                            title: 'Monthly Fuel Spend',
-                            value: '₹84,500',
-                            subtext: '842 Litres Diesel & Petrol',
+                            title: 'Fuel Management Logs',
+                            value: '$fuelLogs Receipts',
+                            subtext: 'Fuel Audit Logs Recorded',
                             icon: Icons.local_gas_station_rounded,
                             iconColor: AppColors.amberWarning,
-                            badgeText: 'Logs Clear',
+                            badgeText: 'Audited',
                           ),
                           StatMetricCard(
-                            title: 'Active Drivers',
-                            value: '8 Drivers',
+                            title: 'Active Fleet Fleet',
+                            value: '$totalVehicles Fleet Units',
                             subtext: 'POD Digital Signature Enabled',
                             icon: Icons.badge_rounded,
                             iconColor: Colors.purpleAccent,

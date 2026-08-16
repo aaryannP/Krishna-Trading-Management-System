@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 
 class AssignAssetScreen extends StatefulWidget {
@@ -11,9 +12,18 @@ class AssignAssetScreen extends StatefulWidget {
 
 class _AssignAssetScreenState extends State<AssignAssetScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedAsset = 'AST-1003 - Honda Activa 6G (50kg Sample Cargo)';
-  String _selectedStaff = 'Vikram Singh (Driver)';
   final _remarksController = TextEditingController();
+  List<dynamic> _assets = [];
+  List<dynamic> _users = [];
+  int? _selectedAssetId;
+  int? _selectedUserId;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFormData();
+  }
 
   @override
   void dispose() {
@@ -21,15 +31,54 @@ class _AssignAssetScreenState extends State<AssignAssetScreen> {
     super.dispose();
   }
 
-  void _onAssignSubmit() {
-    if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Asset $_selectedAsset Successfully Assigned to $_selectedStaff!'),
-        backgroundColor: AppColors.emeraldGreen,
-      ),
-    );
-    Navigator.pushReplacementNamed(context, '/admin/assets/history');
+  Future<void> _loadFormData() async {
+    setState(() => _isLoading = true);
+    final assetsRes = await ApiService.getAssets();
+    final usersRes = await ApiService.getUsersList();
+
+    if (mounted) {
+      final assetList = assetsRes['data']?['assets'] ?? [];
+      final userList = usersRes['data']?['users'] ?? [];
+
+      setState(() {
+        _assets = assetList;
+        _users = userList;
+        if (assetList.isNotEmpty) _selectedAssetId = assetList[0]['id'];
+        if (userList.isNotEmpty) _selectedUserId = userList[0]['id'];
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onAssignSubmit() async {
+    if (!_formKey.currentState!.validate() || _selectedAssetId == null || _selectedUserId == null) return;
+
+    final data = {
+      'asset': _selectedAssetId,
+      'user': _selectedUserId,
+      'notes': _remarksController.text.trim(),
+    };
+
+    final response = await ApiService.assignAsset(data);
+    if (!mounted) return;
+
+    if (response['statusCode'] == 201 || response['statusCode'] == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Asset Successfully Assigned in Database!'),
+          backgroundColor: AppColors.emeraldGreen,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/admin/assets/history');
+    } else {
+      final errorMsg = response['data']?['message'] ?? response['data']?['errors']?.toString() ?? 'Failed to assign asset';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $errorMsg'),
+          backgroundColor: AppColors.coralRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -85,38 +134,39 @@ class _AssignAssetScreenState extends State<AssignAssetScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DropdownButtonFormField<String>(
+                          DropdownButtonFormField<int>(
                             dropdownColor: AppColors.surfaceCard,
-                            value: _selectedAsset,
+                            value: _selectedAssetId,
                             decoration: const InputDecoration(
                               labelText: 'Select Equipment Asset *',
                               prefixIcon: Icon(Icons.inventory_2_outlined, color: AppColors.primaryCyan),
                             ),
-                            items: [
-                              'AST-1003 - Honda Activa 6G (50kg Sample Cargo)',
-                              'AST-1004 - Mahindra Supro Chhota Hathi (500kg)',
-                              'AST-1005 - Handheld Barcode Scanner 01',
-                            ].map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
+                            items: _assets
+                                .map((a) => DropdownMenuItem<int>(
+                                      value: a['id'] as int,
+                                      child: Text("${a['asset_code'] ?? 'AST'} - ${a['name'] ?? 'Asset'}"),
+                                    ))
+                                .toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedAsset = val);
+                              if (val != null) setState(() => _selectedAssetId = val);
                             },
                           ),
                           const SizedBox(height: 20),
-                          DropdownButtonFormField<String>(
+                          DropdownButtonFormField<int>(
                             dropdownColor: AppColors.surfaceCard,
-                            value: _selectedStaff,
+                            value: _selectedUserId,
                             decoration: const InputDecoration(
                               labelText: 'Select Assignee Personnel / Driver *',
                               prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.primaryCyan),
                             ),
-                            items: [
-                              'Vikram Singh (Driver)',
-                              'Mahesh Kumar (Driver)',
-                              'Ramesh Patel (Factory GM)',
-                              'Suresh Kumar (Fleet Manager)',
-                            ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                            items: _users
+                                .map((u) => DropdownMenuItem<int>(
+                                      value: u['id'] as int,
+                                      child: Text("${u['first_name'] ?? ''} ${u['last_name'] ?? ''} (${u['role'] ?? 'Staff'})".trim()),
+                                    ))
+                                .toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedStaff = val);
+                              if (val != null) setState(() => _selectedUserId = val);
                             },
                           ),
                           const SizedBox(height: 20),

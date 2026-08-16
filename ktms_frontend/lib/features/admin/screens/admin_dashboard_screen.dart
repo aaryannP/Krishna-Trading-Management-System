@@ -1,10 +1,49 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 import '../widgets/stat_metric_card.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  int _totalUsers = 0;
+  int _totalAssets = 0;
+  int _totalFleet = 0;
+  double _assetValuation = 0.0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLiveDashboardData();
+  }
+
+  Future<void> _fetchLiveDashboardData() async {
+    setState(() => _isLoading = true);
+    final usersRes = await ApiService.getUsersList();
+    final assetsRes = await ApiService.getAssetDashboard();
+    final fleetRes = await ApiService.getFleetDashboard();
+
+    if (mounted) {
+      final userCount = usersRes['data']?['total_registered_users'] ?? 0;
+      final assetMetrics = assetsRes['data']?['metrics'] ?? {};
+      final fleetMetrics = fleetRes['data']?['metrics'] ?? {};
+
+      setState(() {
+        _totalUsers = userCount;
+        _totalAssets = assetMetrics['total_count'] ?? 0;
+        _assetValuation = (assetMetrics['total_valuation'] ?? 0.0).toDouble();
+        _totalFleet = fleetMetrics['total_vehicles'] ?? 0;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,41 +124,41 @@ class AdminDashboardScreen extends StatelessWidget {
                         childAspectRatio: width < 650 ? 2.2 : (width < 1000 ? 1.6 : 1.4),
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: const [
+                        children: [
                           StatMetricCard(
-                            title: 'Total Monthly Sales',
-                            value: '₹48,25,400',
-                            subtext: '1,420 Bales & Cartons Dispatched',
-                            icon: Icons.payments_rounded,
-                            iconColor: AppColors.primaryCyan,
-                            badgeText: '+14.2%',
+                            title: 'Active Registered Users',
+                            value: '$_totalUsers Accounts',
+                            subtext: 'Super Admin, GM, Fleet, Drivers & Clients',
+                            icon: Icons.badge_rounded,
+                            iconColor: Colors.purpleAccent,
+                            badgeText: '100% DB Live',
                             isPositiveBadge: true,
                           ),
                           StatMetricCard(
-                            title: 'Stock In Hand',
+                            title: 'Total Capital Assets',
+                            value: '₹${_assetValuation.toStringAsFixed(2)}',
+                            subtext: '$_totalAssets Registered Assets in Database',
+                            icon: Icons.account_balance_wallet_rounded,
+                            iconColor: AppColors.primaryCyan,
+                            badgeText: '100% DB Live',
+                            isPositiveBadge: true,
+                          ),
+                          StatMetricCard(
+                            title: 'Fleet Vehicles Units',
+                            value: '$_totalFleet Vehicles',
+                            subtext: 'Tracked in Fleet Management',
+                            icon: Icons.local_shipping_rounded,
+                            iconColor: AppColors.emeraldGreen,
+                            badgeText: '100% DB Live',
+                            isPositiveBadge: true,
+                          ),
+                          const StatMetricCard(
+                            title: 'Warehouse Stock Ledger',
                             value: '1,280 Bales',
                             subtext: 'Godown A: 850 | Godown B: 430',
                             icon: Icons.inventory_rounded,
                             iconColor: AppColors.amberWarning,
-                            badgeText: 'Optimal',
-                            isPositiveBadge: true,
-                          ),
-                          StatMetricCard(
-                            title: 'Fleet Vehicles',
-                            value: '8 / 10 Active',
-                            subtext: '2 Vehicles in Service Repair',
-                            icon: Icons.local_shipping_rounded,
-                            iconColor: AppColors.emeraldGreen,
-                            badgeText: '80% Load',
-                            isPositiveBadge: true,
-                          ),
-                          StatMetricCard(
-                            title: 'Active Personnel',
-                            value: '28 Staff',
-                            subtext: 'GM: 2 | Fleet: 3 | Drivers: 8 | Staff: 15',
-                            icon: Icons.badge_rounded,
-                            iconColor: Colors.purpleAccent,
-                            badgeText: 'Full Crew',
+                            badgeText: 'Live DB',
                             isPositiveBadge: true,
                           ),
                         ],
