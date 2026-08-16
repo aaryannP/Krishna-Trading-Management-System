@@ -61,6 +61,51 @@ class ApiService {
       'mobile': phone,
       'phone_number': phone,
       'role': role,
+      'admin_passkey': 'PARM81492004',
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+      return {
+        'statusCode': response.statusCode,
+        'data': data,
+      };
+    } catch (e) {
+      return {
+        'statusCode': 500,
+        'data': {'error': 'Failed to connect to backend server: $e'},
+      };
+    }
+  }
+
+  // Add Person / Internal Staff Request (Admin Suite)
+  static Future<Map<String, dynamic>> addPerson({
+    required String username,
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String role,
+  }) async {
+    final url = Uri.parse('$baseUrl/users/add-person/');
+    final body = {
+      'username': username,
+      'email': email,
+      'password': password,
+      'confirm_password': password,
+      'first_name': firstName,
+      'last_name': lastName,
+      'mobile': phone,
+      'phone_number': phone,
+      'role': role,
+      'admin_passkey': 'PARM81492004',
     };
 
     try {

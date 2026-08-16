@@ -36,11 +36,10 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
     setState(() => _isLoading = true);
 
     final email = _emailController.text.trim();
-    final response = await ApiService.register(
+    final response = await ApiService.addPerson(
       username: email.contains('@') ? email.split('@')[0] : email,
       email: email,
       password: _passwordController.text.trim(),
-      confirmPassword: _passwordController.text.trim(),
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       phone: _mobileController.text.trim(),
@@ -51,7 +50,7 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
 
     if (!mounted) return;
 
-    if (response['statusCode'] == 200) {
+    if (response['statusCode'] == 201 || response['statusCode'] == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Person Account Created Successfully! Derived Username: ${_emailController.text.split('@')[0]}'),
