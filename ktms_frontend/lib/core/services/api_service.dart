@@ -263,4 +263,125 @@ class ApiService {
       return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
     }
   }
+
+  // Fetch Fleet Vehicles List
+  static Future<Map<String, dynamic>> getVehicles() async {
+    final url = Uri.parse('$baseUrl/fleet/vehicles/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Register New Fleet Vehicle
+  static Future<Map<String, dynamic>> addVehicle(Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/fleet/vehicles/');
+    try {
+      final response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(data));
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Drivers List
+  static Future<Map<String, dynamic>> getDrivers() async {
+    final url = Uri.parse('$baseUrl/fleet/drivers/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Trips List
+  static Future<Map<String, dynamic>> getTrips() async {
+    final url = Uri.parse('$baseUrl/fleet/trips/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Create New Trip Dispatch
+  static Future<Map<String, dynamic>> addTrip(Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/fleet/trips/');
+    try {
+      final response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(data));
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Fuel Logs
+  static Future<Map<String, dynamic>> getFuelLogs() async {
+    final url = Uri.parse('$baseUrl/fleet/fuel/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Record Fuel Expense
+  static Future<Map<String, dynamic>> addFuelLog(Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/fleet/fuel/');
+    try {
+      final response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(data));
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Vehicle Documents & PUC Expiry Alerts
+  static Future<Map<String, dynamic>> getVehicleDocuments() async {
+    final url = Uri.parse('$baseUrl/fleet/documents/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Active Dispatches
+  static Future<Map<String, dynamic>> getDispatches() async {
+    final url = Uri.parse('$baseUrl/fleet/dispatch/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch Reports & Analytics
+  static Future<Map<String, dynamic>> getReportsAnalytics() async {
+    final url = Uri.parse('$baseUrl/reports/analytics/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
+
+  // Fetch System Settings & Security Status
+  static Future<Map<String, dynamic>> getSystemSettings() async {
+    final url = Uri.parse('$baseUrl/system/settings/');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      return {'statusCode': response.statusCode, 'data': jsonDecode(response.body)};
+    } catch (e) {
+      return {'statusCode': 500, 'data': {'error': 'Failed to connect: $e'}};
+    }
+  }
 }

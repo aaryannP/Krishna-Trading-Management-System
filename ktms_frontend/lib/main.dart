@@ -19,6 +19,18 @@ import 'features/admin/screens/asset_history_screen.dart';
 import 'features/admin/screens/asset_maintenance_screen.dart';
 import 'features/admin/screens/asset_categories_screen.dart';
 import 'features/admin/screens/fleet_dashboard_screen.dart';
+import 'features/admin/screens/vehicles_list_screen.dart';
+import 'features/admin/screens/add_vehicle_screen.dart';
+import 'features/admin/screens/drivers_list_screen.dart';
+import 'features/admin/screens/driver_details_screen.dart';
+import 'features/admin/screens/trip_management_screen.dart';
+import 'features/admin/screens/trip_details_screen.dart';
+import 'features/admin/screens/fuel_management_screen.dart';
+import 'features/admin/screens/vehicle_maintenance_screen.dart';
+import 'features/admin/screens/vehicle_documents_screen.dart';
+import 'features/admin/screens/dispatch_management_screen.dart';
+import 'features/admin/screens/reports_analytics_screen.dart';
+import 'features/admin/screens/system_settings_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +71,20 @@ class KtmsApp extends StatelessWidget {
           '/admin/assets/maintenance': (context) => const AssetMaintenanceScreen(),
           '/admin/assets/categories': (context) => const AssetCategoriesScreen(),
           '/admin/fleet/dashboard': (context) => const FleetDashboardScreen(),
+
+          // Super Admin ERP Suite - Part 2 (Pages 13 to 24)
+          '/admin/fleet/vehicles': (context) => const VehiclesListScreen(),
+          '/admin/fleet/vehicles/add': (context) => const AddVehicleScreen(),
+          '/admin/fleet/drivers': (context) => const DriversListScreen(),
+          '/admin/fleet/drivers/details': (context) => const DriverDetailsScreen(),
+          '/admin/fleet/trips': (context) => const TripManagementScreen(),
+          '/admin/fleet/trips/details': (context) => const TripDetailsScreen(),
+          '/admin/fleet/fuel': (context) => const FuelManagementScreen(),
+          '/admin/fleet/maintenance': (context) => const VehicleMaintenanceScreen(),
+          '/admin/fleet/documents': (context) => const VehicleDocumentsScreen(),
+          '/admin/fleet/dispatch': (context) => const DispatchManagementScreen(),
+          '/admin/reports/analytics': (context) => const ReportsAnalyticsScreen(),
+          '/admin/system/settings': (context) => const SystemSettingsScreen(),
         },
       ),
     );
