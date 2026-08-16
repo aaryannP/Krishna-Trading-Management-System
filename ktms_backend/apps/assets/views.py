@@ -1,7 +1,7 @@
 # pyrefly: ignore [missing-import]
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Max
 from assets.models import Asset, AssetAssignment, AssetMaintenance, AssetCategory, AssetStatus
 from assets.serializers import AssetSerializer, AssetAssignmentSerializer, AssetMaintenanceSerializer
 
@@ -26,7 +26,7 @@ class AssetListCreateAPIView(views.APIView):
     def post(self, request):
         data = request.data.copy()
         if not data.get('asset_code'):
-            next_id = (Asset.objects.aggregate(max_id=models.Max('id'))['max_id'] or 0) + 1001
+            next_id = (Asset.objects.aggregate(max_id=Max('id'))['max_id'] or 0) + 1001
             data['asset_code'] = f"AST-{next_id}"
 
         serializer = AssetSerializer(data=data)
