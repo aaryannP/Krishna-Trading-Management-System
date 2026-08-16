@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/api_service.dart';
 import '../widgets/admin_sidebar_navigation.dart';
 
 class UserManagementScreen extends StatefulWidget {
@@ -12,11 +13,55 @@ class UserManagementScreen extends StatefulWidget {
 class _UserManagementScreenState extends State<UserManagementScreen> {
   String _selectedRoleFilter = 'ALL';
   final _searchController = TextEditingController();
+  List<dynamic> _realUsers = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRealUsers();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchRealUsers() async {
+    setState(() => _isLoading = true);
+    final response = await ApiService.getUsersList("");
+    if (mounted) {
+      if (response['statusCode'] == 200 && response['data'] != null) {
+        setState(() {
+          _realUsers = response['data']['users'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  List<dynamic> get _filteredUsers {
+    final query = _searchController.text.trim().toLowerCase();
+    return _realUsers.where((u) {
+      final name = "${u['first_name'] ?? ''} ${u['last_name'] ?? ''}".toLowerCase();
+      final email = (u['email'] ?? '').toString().toLowerCase();
+      final username = (u['username'] ?? '').toString().toLowerCase();
+      final mobile = (u['mobile'] ?? '').toString().toLowerCase();
+      final role = (u['role'] ?? '').toString();
+
+      final matchesQuery = query.isEmpty ||
+          name.contains(query) ||
+          email.contains(query) ||
+          username.contains(query) ||
+          mobile.contains(query);
+
+      final matchesRole = _selectedRoleFilter == 'ALL' || role == _selectedRoleFilter;
+
+      return matchesQuery && matchesRole;
+    }).toList();
   }
 
   @override
@@ -127,27 +172,59 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.surfaceCardBorder),
                     ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(AppColors.background),
-                        columns: const [
-                          DataColumn(label: Text('NAME', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('USERNAME / EMAIL', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('ROLE BADGE', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('MOBILE', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('STATUS', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                          DataColumn(label: Text('ACTION', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
-                        ],
-                        rows: [
-                          _buildUserRow('Aryan Parmar', 'admin | admin@krishnatrading.com', 'SUPER_ADMIN', '+91 8149200499', 'Active 🟢', AppColors.emeraldGreen),
-                          _buildUserRow('Ramesh Patel', 'manager | manager@krishnatrading.com', 'GENERAL_MANAGER', '+91 9825011223', 'Active 🟢', AppColors.emeraldGreen),
-                          _buildUserRow('Suresh Kumar', 'fleet | fleet@krishnatrading.com', 'FLEET_MANAGER', '+91 9712033445', 'Active 🟢', AppColors.emeraldGreen),
-                          _buildUserRow('Vikram Singh', 'vikram_driver', 'DRIVER', '+91 9909055667', 'On Trip 🚚', AppColors.amberWarning),
-                          _buildUserRow('Rajesh Packaging', 'rajesh_pack', 'WHOLESALE_CUSTOMER', '+91 9898011234', 'Verified B2B 🟢', AppColors.primaryCyan),
-                        ],
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40.0),
+                              child: CircularProgressIndicator(color: AppColors.primaryCyan),
+                            ),
+                          )
+                        : _filteredUsers.isEmpty
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40.0),
+                                  child: Text('No users found in database.', style: TextStyle(color: AppColors.textSecondary)),
+                                ),
+                              )
+                            : SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  headingRowColor: WidgetStateProperty.all(AppColors.background),
+                                  columns: const [
+                                    DataColumn(label: Text('NAME', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('USERNAME / EMAIL', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('ROLE BADGE', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('MOBILE', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('STATUS', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                    DataColumn(label: Text('ACTION', style: TextStyle(color: AppColors.textDisabled, fontSize: 11))),
+                                  ],
+                                  rows: _filteredUsers.map((u) {
+                                    final firstName = u['first_name'] ?? '';
+                                    final lastName = u['last_name'] ?? '';
+                                    final fullName = "$firstName $lastName".trim();
+                                    final displayTitle = fullName.isNotEmpty ? fullName : (u['username'] ?? 'User');
+                                    final details = "${u['username'] ?? ''} | ${u['email'] ?? ''}";
+                                    final role = (u['role'] ?? 'USER').toString();
+                                    final mobile = (u['mobile'] ?? 'N/A').toString();
+                                    final isFrozen = u['is_frozen'] == true;
+
+                                    String statusText = 'Active 🟢';
+                                    Color statusColor = AppColors.emeraldGreen;
+                                    if (isFrozen) {
+                                      statusText = 'Frozen 🔴';
+                                      statusColor = AppColors.coralRed;
+                                    } else if (role == 'WHOLESALE_CUSTOMER') {
+                                      statusText = 'Verified B2B 🟢';
+                                      statusColor = AppColors.primaryCyan;
+                                    } else if (role == 'DRIVER') {
+                                      statusText = 'On Duty 🚚';
+                                      statusColor = AppColors.amberWarning;
+                                    }
+
+                                    return _buildUserRow(displayTitle, details, role, mobile, statusText, statusColor);
+                                  }).toList(),
+                                ),
+                              ),
                   ),
                 ],
               ),
