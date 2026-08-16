@@ -48,7 +48,26 @@ class FleetVehicleListAPIView(views.APIView):
         }, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = FleetVehicleSerializer(data=request.data)
+        data = request.data.copy()
+        
+        # Auto-create asset if asset_id is not provided
+        if not data.get('asset'):
+            asset_name = data.get('asset_name') or f"Fleet Vehicle ({data.get('registration_no', 'New')})"
+            purchase_cost = data.get('purchase_cost') or 500000.00
+            
+            next_id = (Asset.objects.aggregate(max_id=Max('id'))['max_id'] or 0) + 1001
+            asset_code = f"AST-{next_id}"
+            
+            new_asset = Asset.objects.create(
+                asset_code=asset_code,
+                name=asset_name,
+                category='VEHICLE',
+                purchase_cost=purchase_cost,
+                status='OPERATIONAL'
+            )
+            data['asset'] = new_asset.id
+
+        serializer = FleetVehicleSerializer(data=data)
         if not serializer.is_valid():
             return Response({"status": "error", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
