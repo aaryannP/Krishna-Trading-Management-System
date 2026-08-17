@@ -1,4 +1,5 @@
 # pyrefly: ignore [missing-import]
+from django.db.models import Max
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
 from django.db.models import Sum, Count
@@ -55,15 +56,18 @@ class FleetVehicleListAPIView(views.APIView):
             asset_name = data.get('asset_name') or f"Fleet Vehicle ({data.get('registration_no', 'New')})"
             purchase_cost = data.get('purchase_cost') or 500000.00
             
-            next_id = (Asset.objects.aggregate(max_id=Max('id'))['max_id'] or 0) + 1001
-            asset_code = f"AST-{next_id}"
+            next_num = Asset.objects.count() + 1001
+            asset_code = f"AST-{next_num}"
+            while Asset.objects.filter(asset_code=asset_code).exists():
+                next_num += 1
+                asset_code = f"AST-{next_num}"
             
             new_asset = Asset.objects.create(
                 asset_code=asset_code,
                 name=asset_name,
                 category='VEHICLE',
                 purchase_cost=purchase_cost,
-                status='OPERATIONAL'
+                status='AVAILABLE'
             )
             data['asset'] = new_asset.id
 
